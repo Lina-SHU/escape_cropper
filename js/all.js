@@ -18,6 +18,7 @@ let cropper = '';
 // step into editing
 nextBtn.addEventListener('click', () => {
   carousel.scrollTo(document.body.clientWidth, 0);
+  watermarkImage();
 });
 
 prevBtn.addEventListener('click', () => {
@@ -38,10 +39,15 @@ upload.addEventListener('change', async (e) => {
   inputBtn.classList.add('hidden');
   cropperImg.src = window.URL.createObjectURL(file);
   cropper = new Cropper(cropperImg, {
-    aspectRatio: 16 / 9,
-    preview: '#preview'
+    aspectRatio: 16 / 9
+    // preview: '#preview'
   });
   cropped.appendChild(cropperImg);
+})
+
+// 裁切事件
+cropped.addEventListener('cropend', (e) => {
+  watermarkImage();
 })
 
 // 重新上傳
@@ -49,36 +55,47 @@ btnReupload.addEventListener('click', (e) => {
   e.preventDefault();
   uploadedImg.classList.add('hidden');
   inputBtn.classList.remove('hidden');
+  // 清除 cropper 資料
+  if (cropper) {
+    cropper.destroy();
+    cropped.innerHTML = '';
+    preview.src = '';
+  }
 })
 
 // 1*1 
 ratioSqaure.addEventListener('click', (e) => {
   e.preventDefault();
   cropper.setAspectRatio(1 / 1);
+  watermarkImage();
 })
 
 // 16*9 
 ratioRec.addEventListener('click', (e) => {
   e.preventDefault();
   cropper.setAspectRatio(16 / 9);
+  watermarkImage();
 })
 
 // Free
 ratioFree.addEventListener('click', (e) => {
   e.preventDefault();
   cropper.setAspectRatio(NaN);
+  watermarkImage();
 })
 
 // rotateLeft
 rotateLeftBtn.addEventListener('click', (e) => {
   e.preventDefault();
   cropper.rotate(-90);
+  watermarkImage();
 })
 
 // rotateRight
 rotateRightBtn.addEventListener('click', (e) => {
   e.preventDefault();
   cropper.rotate(90);
+  watermarkImage();
 })
 
 // download
@@ -91,7 +108,7 @@ function saveCropImg() {
   cropper.getCroppedCanvas().toBlob(function (blob) {
     const href = window.URL.createObjectURL(blob);
     // 加入浮水印
-    watermark([href, './photo.png'])
+    watermark([href, '../photo.png'])
       .image(watermark.image.lowerRight())
       .then(img => {
         const downloadElement = document.createElement('a');
@@ -104,4 +121,26 @@ function saveCropImg() {
       });
     
   }, 'image/png')
+}
+
+// 預覽圖片加浮水印
+function watermarkImage() {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  const img = new Image();
+  img.src = 'https://hexschool.github.io/escape-cropper/photo.png';
+  img.setAttribute('crossOrigin', 'anonymous');
+  img.onload = () => {
+    const canvasWidth = cropper.getCroppedCanvas().width;
+    const canvasHeight = cropper.getCroppedCanvas().height;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    // initializing the canvas with the original image
+    context.drawImage(cropper.getCroppedCanvas(), 0, 0, canvasWidth, canvasHeight);
+
+    // translating the watermark image to the bottom right corner
+    context.drawImage(img, canvas.width - 110, canvas.height - 100, 100, 100);
+    preview.src = canvas.toDataURL('image/png');
+  }
 }
