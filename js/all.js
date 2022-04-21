@@ -13,6 +13,7 @@ const ratioFree = document.querySelector('#ratio-free');
 const cropperImg = document.createElement("img");
 const preview = document.querySelector('#preview');
 const download = document.querySelector('#download');
+const downloadImg = document.querySelector('#downloadImg');
 let cropper = '';
 
 // step into editing
@@ -105,22 +106,10 @@ download.addEventListener('click', (e) => {
 })
 function saveCropImg() {
   const _this = this
-  cropper.getCroppedCanvas().toBlob(function (blob) {
-    const href = window.URL.createObjectURL(blob);
-    // 加入浮水印
-    watermark([href, '../photo.png'])
-      .image(watermark.image.lowerRight())
-      .then(img => {
-        const downloadElement = document.createElement('a');
-        downloadElement.href = img.src;
-        downloadElement.download = _this.imgName
-        document.body.appendChild(downloadElement);
-        downloadElement.click();
-        document.body.removeChild(downloadElement);
-        window.URL.revokeObjectURL(href); 
-      });
-    
-  }, 'image/png')
+  downloadImg.download = _this.imgName
+  document.body.appendChild(downloadImg);
+  downloadImg.click();
+  window.URL.revokeObjectURL(downloadImg.href);
 }
 
 // 預覽圖片加浮水印
@@ -142,5 +131,6 @@ function watermarkImage() {
     // translating the watermark image to the bottom right corner
     context.drawImage(img, canvas.width - 110, canvas.height - 100, 100, 100);
     preview.src = canvas.toDataURL('image/png');
+    downloadImg.href = canvas.toDataURL('image/png');
   }
 }
